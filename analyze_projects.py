@@ -6,8 +6,10 @@ from utils import get_top_verbs_in_path
 def calc_verbs(_project: str, verb_size: int):
 
     project_path = os.path.join('.', _project)
-    words = get_top_verbs_in_path(project_path)
+    if not os.path.exists(project_path):
+        return
 
+    words = get_top_verbs_in_path(project_path)
     if words:
         print('%s: total %s words, %s unique' % (_project, len(words), len(set(words))))
         for word, occurence in collections.Counter(words).most_common(verb_size):
