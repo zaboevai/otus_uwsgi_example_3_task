@@ -1,7 +1,6 @@
-import ast
 import os
 import collections
-
+import ast
 from nltk import pos_tag
 
 
@@ -81,11 +80,6 @@ def get_func_name_from_tree(tree: list) -> list:
     return [node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
 
 
-#
-# def get_all_names(tree):
-#     return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
-
-
 def get_verbs_from_function_name(function_name: str) -> list:
     """
     Get verbs from function name
@@ -93,17 +87,6 @@ def get_verbs_from_function_name(function_name: str) -> list:
     :return: list of verbs
     """
     return [verb_word for verb_word in function_name.split('_') if is_verb(verb_word)]
-
-
-# def get_all_words_in_path(path):
-#     trees = [t for t in get_trees(path) if t]
-#     function_names = [f for f in flat([get_all_names(t) for t in trees]) if
-#                       not (f.startswith('__') and f.endswith('__'))]
-#
-#     def split_snake_case_name_to_words(name):
-#         return [n for n in name.split('_') if n]
-#
-#     return flat([split_snake_case_name_to_words(function_name) for function_name in function_names])
 
 
 def get_top_verbs_in_path(path: str = None, top_size: int = 10) -> list:
@@ -121,14 +104,6 @@ def get_top_verbs_in_path(path: str = None, top_size: int = 10) -> list:
     print('functions extracted')
     verbs = make_flat([get_verbs_from_function_name(user_func_name) for user_func_name in user_func_names])
     return collections.Counter(verbs).most_common(top_size)
-
-
-# def get_top_functions_names_in_path(path, top_size=10):
-#     t = get_trees(path)
-#     nms = [f for f in
-#            flat([[node.name.lower() for node in ast.walk(t) if isinstance(node, ast.FunctionDef)] for t in t]) if
-#            not (f.startswith('__') and f.endswith('__'))]
-#     return collections.Counter(nms).most_common(top_size)
 
 
 def calc_verbs_in_project(_project: str, verb_size: int):
