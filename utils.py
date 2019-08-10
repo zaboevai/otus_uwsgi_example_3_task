@@ -1,8 +1,13 @@
 import ast
 import collections
 import os
+from git import Repo
 
 from nltk import pos_tag as nltk_pos_tag
+
+
+def clone_github_repo(repo_path, dir_path):
+    Repo.clone_from(url=repo_path, to_path=dir_path)
 
 
 def make_flat(_list: list) -> list:
@@ -49,14 +54,13 @@ def get_trees(path: str, with_file_names: bool = False, with_file_content: bool 
 
     for file_name in file_names:
 
-        with open(file_name, 'r', encoding='utf-8') as file:
+        with open(file=file_name, mode='r', encoding='utf-8') as file:
             file_content = file.read()
 
         try:
             tree = ast.parse(file_content)
         except SyntaxError as exc:
             raise exc
-            tree = None
 
         if with_file_names:
             if with_file_content:
