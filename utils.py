@@ -1,7 +1,8 @@
-import os
-import collections
 import ast
-from nltk import pos_tag
+import collections
+import os
+
+from nltk import pos_tag as nltk_pos_tag
 
 
 def make_flat(_list: list) -> list:
@@ -23,7 +24,7 @@ def is_verb(_word: str) -> bool:
     """
     if not _word:
         return False
-    pos_info = pos_tag(_word)
+    pos_info = nltk_pos_tag(_word)
     return pos_info[0][1] == 'VB'
 
 
@@ -46,8 +47,6 @@ def get_trees(path: str, with_file_names: bool = False, with_file_content: bool 
                 if len(file_names) == 100:
                     break
 
-    print('total %s files' % len(file_names))
-
     for file_name in file_names:
 
         with open(file_name, 'r', encoding='utf-8') as file:
@@ -56,7 +55,7 @@ def get_trees(path: str, with_file_names: bool = False, with_file_content: bool 
         try:
             tree = ast.parse(file_content)
         except SyntaxError as exc:
-            print(exc)
+            raise exc
             tree = None
 
         if with_file_names:
@@ -67,7 +66,6 @@ def get_trees(path: str, with_file_names: bool = False, with_file_content: bool 
         else:
             trees.append(tree)
 
-    print('trees generated')
     return trees
 
 
@@ -101,31 +99,6 @@ def get_top_verbs_in_path(path: str = None, top_size: int = 10) -> list:
     func_names = make_flat(list(get_func_name_from_tree(tree) for tree in trees))
     user_func_names = [func_name for func_name in func_names
                        if not (func_name.startswith('__') and func_name.endswith('__'))]
-    print('functions extracted')
+
     verbs = make_flat([get_verbs_from_function_name(user_func_name) for user_func_name in user_func_names])
     return collections.Counter(verbs).most_common(top_size)
-
-
-def calc_verbs_in_project(_project: str, verb_size: int):
-    project_path = os.path.join('.', _project)
-    words = get_top_verbs_in_path(project_path)
-    print('%s: total %s words, %s unique' % (_project, len(words), len(set(words))))
-    for word, occurence in collections.Counter(words).most_common(verb_size):
-        print(word, occurence)
-
-
-if __name__ == '__main__':
-
-    TOP_SIZE = 200
-
-    projects = [
-        'django',
-        'flask',
-        'pyramid',
-        'reddit',
-        'requests',
-        'sqlalchemy',
-    ]
-
-    for project in projects:
-        calc_verbs_in_project(project, TOP_SIZE)
