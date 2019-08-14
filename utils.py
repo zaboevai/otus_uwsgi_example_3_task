@@ -36,8 +36,7 @@ def is_verb(_word: str) -> bool:
     if not _word:
         return False
     pos_info = nltk.pos_tag([_word])
-    res = pos_info[0][1]
-    return res == 'VB'
+    return pos_info[0][1] == 'VB'
 
 
 def get_trees_from_path(path: str, with_file_names: bool = False, with_file_content: bool = False) -> list:
@@ -118,12 +117,14 @@ def get_all_words_from_path(path: str, only_func_names: bool = False) -> list:
     """
 
     trees = get_trees_from_path(path)
+    if not trees:
+        return
 
+    names = []
     for tree in trees:
-        names = (get_names_from_tree(tree=tree, only_func_names=only_func_names))
+        names.extend(get_names_from_tree(tree=tree, only_func_names=only_func_names))
 
-    user_names = [name for name in names if
-                  not (name.startswith('__') and name.endswith('__'))]
+    user_names = [name for name in names if not (name.startswith('__') and name.endswith('__'))]
 
     return make_flat([split_snake_case_name_to_words(user_name) for user_name in user_names])
 
@@ -137,6 +138,9 @@ def get_top_words(path: str, top_size: int = 10, only_func_names=False, only_ver
     :return:            list of verbs
     """
     names = get_all_words_from_path(path=path, only_func_names=only_func_names)
+
+    if not names:
+        exit(f'В файлах каталога {path} не удалось найти слова')
 
     if only_verbs:
         names = [name for name in names if is_verb(name)]
