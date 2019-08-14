@@ -2,12 +2,17 @@ import ast
 import collections
 import os
 
+import nltk
 from git import Repo
-
-from nltk import pos_tag as nltk_pos_tag
 
 
 def clone_github_repo(repo_path, dir_path):
+    """
+    Clone GITHUB repositories to dir
+    :param repo_path:
+    :param dir_path:
+    :return:
+    """
     Repo.clone_from(url=repo_path, to_path=dir_path)
 
 
@@ -30,7 +35,7 @@ def is_verb(_word: str) -> bool:
     """
     if not _word:
         return False
-    pos_info = nltk_pos_tag(_word)
+    pos_info = nltk.pos_tag(_word)
     return pos_info[0][1] == 'VB'
 
 
@@ -68,8 +73,8 @@ def get_trees_from_path(path: str, with_file_names: bool = False, with_file_cont
 
         if with_file_names:
             trees.append((file_name, tree))
-        elif with_file_content:
-            trees.append((file_name, file_content, tree))
+            if with_file_content:
+                trees.append((file_name, file_content, tree))
         else:
             trees.append(tree)
 
@@ -83,82 +88,53 @@ def get_names_from_tree(tree: list, func_names=False) -> list:
     :param tree:    ast tree
     :return:        list of func names
     """
-    ast_instance = ast.FunctionDef if func_names else ast.Name
-    return [node.name.lower() for node in ast.walk(tree) if isinstance(node, ast_instance)]
+    if func_names:
+        res = [node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+    else:
+        res = [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+
+    return res
 
 
-def split_snake_case_name_to_words(name: str, verbs=False) -> list:
+def split_snake_case_name_to_words(name: str) -> list:
     """
-    Get verbs from function name
+    make a list of words without '_'
     :param name:
-    :return: list of words
+    :return:
     """
-    # TODO РАЗБИТЬ на 2 либо сплит вынести
-    verb_words = []
-    words = []
-
-    name_words = [name_word for name_word in name.split('_')]
-    for name_word in name_words:
-        if is_verb(name_word):
-            verb_words.append(name_word)
-        else:
-            words.append(name_word)
-
-    return verb_words if verbs else words
+    return [name_word for name_word in name.split('_')]
 
 
-# def get_all_names_from_tree(tree):
-#     return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+def get_all_words_from_path(path: str, only_func_names: bool = False) -> list:
+    """
+    Get all words or func names from path
+    :param path:
+    :param only_func_names:
+    :return:
+    """
 
-
-def get_all_words_from_path(path, func_names=True):
     trees = get_trees_from_path(path)
-    names = []
-    for tree in trees:
-        names.append(get_names_from_tree(tree=tree, func_names=func_names))
 
-    # TODO возможно есть лишний make_flat
-    names = make_flat(names)
+    for tree in trees:
+        names = (get_names_from_tree(tree=tree, func_names=only_func_names))
+
     user_names = [name for name in names if
                   not (name.startswith('__') and name.endswith('__'))]
-    # TODO возможно есть лишний make_flat
+
     return make_flat([split_snake_case_name_to_words(user_name) for user_name in user_names])
 
 
-# def get_func_name_from_path(path: str) -> list:
-#     """
-#     Get function names in path
-#     :param path:        path to file
-#     :return:            list of function names
-#     """
-#     trees = get_trees_from_path(path)
-#     func_names = make_flat([get_names_from_tree(tree=tree, func_names=True) for tree in trees])
-#     user_func_names = [func_name for func_name in func_names
-#                        if not (func_name.startswith('__') and func_name.endswith('__'))]
-#     return user_func_names
-
-
-def get_top_func_names(path: str, top_size: int = 10) -> list:
-    """
-    Get top function names in path with specified size
-    :param path:        path to file
-    :param top_size:    size of function names
-    :return:            list of function names
-    """
-    func_names = get_all_words_from_path(path=path, func_names=True)
-    return collections.Counter(func_names).most_common(top_size)
-
-
-def get_top_verbs(path: str, top_size: int = 10, func_names=False) -> list:
+def get_top_words(path: str, top_size: int = 10, only_func_names=False, only_verbs=False) -> list:
     """
     Get top verbs in path with specified size
-    :param func_names:
+    :param only_func_names:
     :param path:        path to file
     :param top_size:    size of verb
     :return:            list of verbs
     """
+    names = get_all_words_from_path(path=path, only_func_names=only_func_names)
 
-    names = get_all_words_from_path(path=path, func_names=func_names)
+    if only_verbs:
+        names = [name for name in names if is_verb(name)]
 
-    verbs = make_flat([split_snake_case_name_to_words(name, verb_words=True) for name in names])
-    return collections.Counter(verbs).most_common(top_size)
+    return collections.Counter(names).most_common(top_size)
