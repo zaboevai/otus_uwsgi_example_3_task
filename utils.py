@@ -101,7 +101,7 @@ def get_names_from_tree(tree: list, only_func_names=False) -> list:
 
 def split_snake_case_name_to_words(name: str) -> list:
     """
-    make a list of words without '_'
+    Make a list of words without '_'
     :param name:
     :return:
     """
@@ -118,7 +118,7 @@ def get_all_words_from_path(path: str, only_func_names: bool = False) -> list:
 
     trees = get_trees_from_path(path)
     if not trees:
-        return
+        return []
 
     names = []
     for tree in trees:
@@ -132,6 +132,7 @@ def get_all_words_from_path(path: str, only_func_names: bool = False) -> list:
 def get_top_words(path: str, top_size: int = 10, only_func_names=False, only_verbs=False) -> list:
     """
     Get top verbs in path with specified size
+    :param only_verbs:
     :param only_func_names:
     :param path:        path to file
     :param top_size:    size of verb
