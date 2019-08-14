@@ -1,6 +1,6 @@
 import os
 import collections
-from utils import get_top_verbs
+from hw_01.utils import get_top_verbs
 
 
 def print_calc_result(_project, verb_size, words):
