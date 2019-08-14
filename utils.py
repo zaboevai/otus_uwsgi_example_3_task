@@ -35,8 +35,9 @@ def is_verb(_word: str) -> bool:
     """
     if not _word:
         return False
-    pos_info = nltk.pos_tag(_word)
-    return pos_info[0][1] == 'VB'
+    pos_info = nltk.pos_tag([_word])
+    res = pos_info[0][1]
+    return res == 'VB'
 
 
 def get_trees_from_path(path: str, with_file_names: bool = False, with_file_content: bool = False) -> list:
@@ -81,19 +82,22 @@ def get_trees_from_path(path: str, with_file_names: bool = False, with_file_cont
     return trees
 
 
-def get_names_from_tree(tree: list, func_names=False) -> list:
+def get_names_from_tree(tree: list, only_func_names=False) -> list:
     """
     Get function names from Abstract Syntax Trees
-    :param func_names:
+    :param only_func_names:
     :param tree:    ast tree
     :return:        list of func names
     """
-    if func_names:
-        res = [node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
-    else:
-        res = [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+    func_names = [node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
 
-    return res
+    if only_func_names:
+        return func_names
+
+    names = [node.id.lower() for node in ast.walk(tree) if isinstance(node, ast.Name)]
+    names.extend(func_names)
+
+    return names
 
 
 def split_snake_case_name_to_words(name: str) -> list:
@@ -116,7 +120,7 @@ def get_all_words_from_path(path: str, only_func_names: bool = False) -> list:
     trees = get_trees_from_path(path)
 
     for tree in trees:
-        names = (get_names_from_tree(tree=tree, func_names=only_func_names))
+        names = (get_names_from_tree(tree=tree, only_func_names=only_func_names))
 
     user_names = [name for name in names if
                   not (name.startswith('__') and name.endswith('__'))]
